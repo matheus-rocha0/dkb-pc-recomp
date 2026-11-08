@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cfg.h"
 #include "gfx.h"
 #include "host.h"
 #include "nvn_api.h"
@@ -794,7 +795,7 @@ NVN_API(nvnQueuePresentTexture) {
     uint64_t slot = now + pace(&o->pace, now, period);
     gfx_backend()->present(t, o->crop, slot);
     o->ticket[idx] = o->presents;
-    o->avail[idx] = slot + period;
+    o->avail[idx] = cfg_bool("TOTK_FRAME_QUEUE") ? slot : slot + period;
     frame_step_present(slot, o->interval);   // frame_rate.c: the real-time step follows the display times
     rt_frame_presented(t, o->presents);
 }

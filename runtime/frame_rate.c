@@ -51,6 +51,7 @@
 #define STEP_MAX_S (1.0 / 15.0)    // longest step; a longer frame slows the game down
 #define STEP_RESET_S 0.25          // a gap this long (loading, a debugger) restarts the average
 #define STEP_FIRST_S (1.0 / 60.0)
+#define STEP_MIN_S (1.0 / 240.0)   // shortest step; a shorter one makes the game's physics run out of memory
 
 static _Atomic uint64_t *step_word;   // patch page +0: ratio (low float), seconds (high float)
 static double step_now = STEP_FIRST_S;   // the step the patch page holds: what the game steps each frame
@@ -109,7 +110,7 @@ int frame_step_realtime(void) { return step_word != NULL; }
 // only the pacer changes, as the step has no lower bound. Without it the game steps whole 60 Hz vsyncs and the pacer
 // follows the game's interval, so the limit stops at 60.
 #define LIMIT_MIN_HZ 30
-#define LIMIT_MAX_HZ 360
+#define LIMIT_MAX_HZ 240   // 1 / STEP_MIN_S
 static int fps60_set = -2;
 static unsigned limit_seen;
 static int limit_read;
@@ -121,8 +122,13 @@ static int limit_parse(void) {
     if (!strcmp(e, "display")) return 0;
     char *end;
     long n = strtol(e, &end, 10);
-    if (!*end && n >= LIMIT_MIN_HZ && n <= LIMIT_MAX_HZ) return (int)n;
-    rt_log("frame rate: TOTK_FPS_LIMIT=%s is not 30..360 or display; 60", e);
+    if (!*end && n > LIMIT_MAX_HZ) {
+        rt_log("frame rate: TOTK_FPS_LIMIT=%s is above %d, where the game's physics runs out of memory; %d", e,
+               LIMIT_MAX_HZ, LIMIT_MAX_HZ);
+        return LIMIT_MAX_HZ;
+    }
+    if (!*end && n >= LIMIT_MIN_HZ) return (int)n;
+    rt_log("frame rate: TOTK_FPS_LIMIT=%s is not %d..%d or display; 60", e, LIMIT_MIN_HZ, LIMIT_MAX_HZ);
     return 60;
 }
 
@@ -273,6 +279,7 @@ void frame_step_present(uint64_t display_ns, int interval) {
             double sum = 0;
             for (unsigned i = 0; i < sample_count; i++) sum += samples[i];
             step = sum / sample_count;
+            if (step < STEP_MIN_S) step = STEP_MIN_S;
             step_store((float)step);
         }
     }
