@@ -491,6 +491,7 @@ void vk_pipe_state_defaults(VkPipeState *s);   // NVN defaults of every state ob
 enum { VK_PIPE_SUPPORT = GFX_RES_KINDS };      // VkPipeBinding.kind of the support buffer
 #define VK_PIPE_ZERO_BINDING 16                // vertex binding of shader inputs without an attribute: bind a zeroed
                                                // buffer of at least 16 bytes there (stride 0)
+#define VK_PIPE_ALL_BINDINGS 0x1ffffu          // every vertex binding, streams 0-15 and the zero binding
 typedef struct {
     uint16_t binding;                      // in its set
     uint8_t stage;                         // GFX_STAGE_* that declared it (support buffer: the first stage)
@@ -543,8 +544,15 @@ VkPipeline vk_pipeline_compute(const GfxShader *cs, const VkPipeInfo **info);
 // has them dynamic, depth clamp, polygon mode, blend enables, equations, write masks and alpha to coverage. The replay
 // sets the rest: vkCmdSetViewportWithCount, vkCmdSetScissorWithCount, depth bias, blend constants, stencil compare and
 // write masks and references; vertex buffers with vkCmdBindVertexBuffers2 (strides NULL when
-// vk_pipeline_vertex_input_dynamic(), else from VkPipeState.vstream).
-void vk_pipeline_set_dynamic(VkCommandBuffer cb, const VkPipeState *s);
+// vk_pipeline_vertex_input_dynamic(), else from VkPipeState.vstream). Returns the vertex bindings (bit per binding) the
+// state's vertex input reads, whether set here or made into the pipeline.
+uint32_t vk_pipeline_set_dynamic(VkCommandBuffer cb, const VkPipeState *s);
+// The replay's variant (one thread, TOTK_DYN_DELTA): valid 1 says every graphics pipeline bound in cb since the last call
+// was one of vk_pipeline_graphics*'s, which all declare the same dynamic states, and nothing else set them, so cb still
+// holds what that call recorded (Vulkan keeps dynamic state across such binds for the life of the command buffer);
+// then only the commands whose values differ are recorded. valid 0 (a new command buffer, or one whose state another
+// recorder changed) records everything. *cmds: the commands recorded (valid 0: 1). Returns as vk_pipeline_set_dynamic.
+uint32_t vk_pipeline_set_dynamic_delta(VkCommandBuffer cb, const VkPipeState *s, int valid, uint32_t *cmds);
 int vk_pipeline_vertex_input_dynamic(void);    // 1: vertex input is VK_EXT_vertex_input_dynamic_state
 // Translator answers from the bound state: attr_type from the vertex attribute formats (vs), frag_out_type from the
 // colour target formats (fs). Other fields are left as they are; either pointer may be NULL.
