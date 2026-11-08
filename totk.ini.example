@@ -241,3 +241,11 @@
 # names each dirty target over the limit that stays on the GPU ("fence write-back skipped-for-size") and each one over
 # 65536 bytes that went back ("over-default"). Raising it costs a copy per such target and wait.
 # wb_fence_limit = 65536
+# Block-linear texture deswizzling on the GPU: auto (GPU where storage is an imported pool), gpu, cpu, or check.
+# deswizzle = auto
+# Mirrored pool exact flush ranges: 0 (default) copies exact ranges; 1 restores the full span from lowest to highest flush.
+# flush_span = 0
+# Write-back merge of VRAM mirrors: 1 (default) merges only modified 32-bit words via compute shader back to guest memory.
+# wb_merge = 1
+# Limit reported VRAM budget to this many MiB (0 = off).
+# vram_limit_mib = 0
