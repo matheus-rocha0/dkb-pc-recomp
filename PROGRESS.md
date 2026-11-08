@@ -27,7 +27,7 @@
 - **Shader Headers:** Validados com `tools/build_shaders.py --check` (código 0).
 - **Compilação Otimizada:** Executável gerado com sucesso via [`tools/local_build.ps1`](tools/local_build.ps1) em `C:\Users\Matheus_\dev\dkb-build\optimized\dkb.exe` (190.310.912 bytes, 181.49 MB, link em 1,0 s).
 - **Self-Tests e Probes de Subsistemas:**
-  - `--version`: `dkb 0.1.0+36af23e (Donkey Kong Bananza 1.0.0)`
+  - `--version`: `dkb 0.1.0+76c76f5 (Donkey Kong Bananza 1.0.0)`
   - `--selftest`: 180.061 funções roteadas no dispatch, heap e virtual memory OK (0 failures).
   - `--probe-cfg`: Parsing e validação de chaves do .ini OK (`probe-cfg: ok`).
   - `--probe-dpi`: Manifest v2 e dimensões de monitor OK.
@@ -36,5 +36,6 @@
   - `--probe-fs`: Montagem de RomFS e transações de save OK (75.238 arquivos verificados).
   - `--probe-gfx-abi`: Layouts de estruturas e NVNtextureView OK (28 layouts ajustados).
   - `--probe-astc`: Decodificador computacional ASTC testado em 14 footprints, bit-exact com astc_decode_ldr (0 erros).
+  - `--probe-vkmem` (com `TOTK_DESWIZZLE=check`): `passed` (343 casos de deswizzle CPU, 186.758 blocos ASTC, 130 formatos mapeados, 41 GPU checks incluindo validação bit-a-bit do compute shader `bl_deswizzle.comp` no layout Switch 2 GOB contra a referência CPU, 0 validation errors).
 - **Sincronização com Fork:** `bananza` atualizada via fast-forward com `perf/integration` e enviada para `origin`.
 - **Ambiente de Teste Seguro:** Pasta `C:\Users\Matheus_\dev\dkb-build\optimized` estruturada com junções NTFS para `romfs`, `exefs`, `shader-cache` e cópia de `dkb.ini` configurado para testes de gameplay do usuário.
